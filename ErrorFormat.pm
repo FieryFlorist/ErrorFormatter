@@ -159,7 +159,7 @@ sub printErrNml {
 	# Fourth, insert digits (and decimal if necessary)
 	for (my $i=$valDigs; $i>=$sigDigs; $i=$i-1) {
 		$returnStr = $returnStr . $returnArray[$valDigs-$i];
-		if ($i == 0) {
+		if ($i == 0 and $i>$sigDigs) {
 			$returnStr = $returnStr . ".";
 		}
 	}
