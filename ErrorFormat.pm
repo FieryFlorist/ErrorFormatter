@@ -67,6 +67,7 @@ sub printErrSci {
 				return "$returnStr($errStr)E-" . sprintf('%02d', -$sigDigs);
 			}
 	} else {
+		# Grab all the digits to be printed
 		my $nextVal = floor($value/(10**$valDigs));
 		my @returnArray = ($nextVal);
 		$value = $value - $nextVal * (10**$valDigs);
@@ -129,27 +130,40 @@ sub printErrNml {
 	}
 	# If the value is larger than the error, loop through all the digits and return them.
 	# First, create the digit list
+	my $nextVal = floor($value/(10**$valDigs));
+	my @returnArray = ($nextVal);
+	$value = $value - $nextVal * (10**$valDigs);
+	for ($i = $valDigs-1; $i > $sigDigs; $i = $i-1) {
+		$nextVal = floor($value/(10**$i));
+		push(@returnArray, $nextVal);
+		$value = $value - $nextVal * (10**$i);
+	}
+	$nextVal = round($value/(10**$sigDigs));
+	push(@returnArray, $nextVal);
+	$countBack = scalar(@returnArray)-1;
 	# Second, carry any rounding
-	# Third, add any leading zeros.
-	# Fourth, insert digits (and decimal if necessary)
-	# Fifth, add any trailing zeros (to value and error!)
+	while ($returnArray[$countBack] > 9) {
+		$returnArray[$countBack] = $returnArray[$countBack] - 10;
+		$countBack = $countBack - 1;
+		$returnArray[$countBack] = $returnArray[$countBack] + 1;
+	}
+	# Prepare the output string
 	my $returnStr = "";
+	# Third, add any leading zeros.
 	if ($valDigs < 0) {
 		$returnStr = "0.";
 		for (my $i = -1; $i > $valDigs; $i = $i - 1) {
 			$returnStr = $returnStr . "0";
 		}
 	}
-	for (my $i=$valDigs; $i>$sigDigs; $i=$i-1) {
-		my $nextVal = floor($value/(10**$i));
-		$returnStr = $returnStr . sprintf('%1d', $nextVal);
+	# Fourth, insert digits (and decimal if necessary)
+	for (my $i=$valDigs; $i>=$sigDigs; $i=$i-1) {
+		$returnStr = $returnStr . $returnArray[$valDigs-$i];
 		if ($i == 0) {
 			$returnStr = $returnStr . ".";
 		}
-		$value = $value - $nextVal*(10**$i);
 	}
-	my $nextVal = round($value/(10**$sigDigs));
-	my $returnStr = $returnStr . sprintf('%1d', $nextVal);
+	# Fifth, add any trailing zeros (to value and error!)
 	for (my $i=0; $i < $sigDigs; $i=$i+1) {
 		$returnStr = $returnStr . "0";
 		$errStr = $errStr . "0";
